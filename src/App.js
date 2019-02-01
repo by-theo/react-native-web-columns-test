@@ -2,12 +2,19 @@ import React, { Component } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 import Columns from "react-columns";
 
-class App extends Component {
-  state = {
-    window: Dimensions.get("window")
-  };
+const minItemWidth = 280;
+const gap = 20;
 
-  handler = dims => this.setState(dims);
+class App extends Component {
+  constructor(props) {
+    super(props);
+    const window = Dimensions.get("window");
+    const measurements = this.calculateMeasurements({ window });
+    this.state = {
+      window,
+      ...measurements
+    };
+  }
 
   componentWillMount() {
     Dimensions.addEventListener("change", this.handler);
@@ -16,6 +23,46 @@ class App extends Component {
   componentWillUnmount() {
     // Important to stop updating state after unmount
     Dimensions.removeEventListener("change", this.handler);
+  }
+
+  handler = dims => {
+    const measurements = this.calculateMeasurements(dims);
+    this.setState({
+      ...dims,
+      ...measurements
+    });
+  };
+
+  calculateMeasurements(dims) {
+    const { width } = dims.window;
+
+    const bodyWidth = width;
+    let columns = 3;
+    let itemSide = (bodyWidth - gap * 4) / columns;
+    // minimum width for 3 columns
+    const columns3 = minItemWidth * 3 + gap * 4;
+
+    // minimum width for 2 columns
+    const columns2 = minItemWidth * 2 + gap * 3;
+
+    // Handle 2 columns
+    if (bodyWidth <= columns3 && bodyWidth > columns2) {
+      columns = 2;
+      itemSide = (bodyWidth - gap * 3) / columns;
+    } else if (bodyWidth <= columns2) {
+      columns = 1;
+      // Keep each item width at a minumum of minItemWidth
+      if (bodyWidth < minItemWidth + gap * 2) {
+        itemSide = minItemWidth;
+      } else {
+        itemSide = bodyWidth - gap * 2;
+      }
+    }
+
+    return {
+      itemSide,
+      columns
+    };
   }
 
   renderItems(style) {
@@ -28,13 +75,11 @@ class App extends Component {
   }
 
   render() {
-    const { width } = this.state.window;
-    const gap = 20;
-    const columns = 3;
-    const itemSide = (width - gap * 4) / columns;
+    const { columns, itemSide } = this.state;
     const styles = StyleSheet.create({
       app: {
-        marginHorizontal: gap + "px"
+        marginHorizontal: gap + "px",
+        alignItems: "center"
       },
       item: {
         width: itemSide,
