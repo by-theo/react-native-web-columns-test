@@ -45,7 +45,7 @@ class App extends Component {
     });
     return (
       <View style={styles.app}>
-        <Columns columns={columns.toString()} gap={gap + "px"}>
+        <Columns columns={columns} gap={gap + "px"}>
           {this.renderItems(styles.item)}
         </Columns>
       </View>
